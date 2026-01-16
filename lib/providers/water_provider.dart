@@ -1,12 +1,17 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/repositories/water_repository.dart';
 import '../data/models/water_log_model.dart';
 import '../data/models/streak_data.dart';
 import '../data/preferences/preferences_manager.dart';
+import '../data/preferences/notification_preferences.dart';
+import '../services/notification_service.dart';
 
 class WaterProvider with ChangeNotifier {
   final WaterRepository _repository = WaterRepository();
   final PreferencesManager _prefs;
+  final NotificationService _notificationService = NotificationService();
+  NotificationPreferences? _notifPrefs;
 
   List<WaterLogModel> _logs = [];
   StreakData _streak = StreakData();
@@ -33,7 +38,13 @@ class WaterProvider with ChangeNotifier {
     } else {
       _dailyGoal = _prefs.getDailyWaterGoal();
     }
+
+    // Initialize notification preferences
+    final prefs = await SharedPreferences.getInstance();
+    _notifPrefs = NotificationPreferences(prefs);
+
     await loadWaterLogs();
+    await _scheduleWaterReminders();
   }
 
   Future<void> loadWaterLogs() async {
@@ -68,6 +79,7 @@ class WaterProvider with ChangeNotifier {
 
       await _repository.addWaterLog(log);
       await loadWaterLogs();
+      await _scheduleWaterReminders();
     } catch (e) {
       debugPrint('Error adding water: $e');
     }
@@ -89,7 +101,23 @@ class WaterProvider with ChangeNotifier {
 
   void updateGoal(int newGoal) {
     _dailyGoal = newGoal;
-    _prefs.setDailyWaterGoal(newGoal);
+    _scheduleWaterReminders();
     notifyListeners();
+  }
+
+  Future<void> _scheduleWaterReminders() async {
+    if (_notifPrefs == null) return;
+
+    final enabled =
+        _notifPrefs!.notificationsEnabled &&
+        _notifPrefs!.waterNotificationsEnabled;
+    final interval = _notifPrefs!.waterReminderIntervalHours;
+
+    await _notificationService.scheduleWaterReminders(
+      enabled: enabled,
+      intervalHours: interval,
+      currentIntake: _totalIntake,
+      dailyGoal: _dailyGoal,
+    );
   }
 }

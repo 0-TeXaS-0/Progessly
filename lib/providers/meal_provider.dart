@@ -1,10 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/repositories/meal_repository.dart';
 import '../data/models/meal_model.dart';
 import '../data/models/streak_data.dart';
+import '../data/preferences/notification_preferences.dart';
+import '../services/notification_service.dart';
 
 class MealProvider with ChangeNotifier {
   final MealRepository _repository = MealRepository();
+  final NotificationService _notificationService = NotificationService();
+  NotificationPreferences? _notifPrefs;
 
   List<MealModel> _meals = [];
   StreakData _streak = StreakData();
@@ -22,6 +27,13 @@ class MealProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      // Initialize notification preferences
+      if (_notifPrefs == null) {
+        final prefs = await SharedPreferences.getInstance();
+        _notifPrefs = NotificationPreferences(prefs);
+        await _scheduleMealReminders();
+      }
+
       final today = DateTime.now();
       _meals = await _repository.getMealsByDate(today);
       _totalCalories = await _repository.getTotalCalories(today);
@@ -71,6 +83,16 @@ class MealProvider with ChangeNotifier {
   String _getCurrentTime() {
     final now = DateTime.now();
     return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _scheduleMealReminders() async {
+    if (_notifPrefs == null) return;
+
+    final enabled =
+        _notifPrefs!.notificationsEnabled &&
+        _notifPrefs!.mealsNotificationsEnabled;
+
+    await _notificationService.scheduleMealReminders(enabled: enabled);
   }
 }
 

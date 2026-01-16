@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme.dart';
 import 'data/preferences/preferences_manager.dart';
+import 'services/notification_service.dart';
 import 'providers/task_provider.dart';
 import 'providers/meal_provider.dart';
 import 'providers/water_provider.dart';
@@ -15,6 +16,10 @@ void main() async {
 
   final prefsManager = PreferencesManager();
   await prefsManager.init();
+
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
 
   runApp(ProgresslyApp(prefsManager: prefsManager));
 }

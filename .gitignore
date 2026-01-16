@@ -131,6 +131,12 @@ firebase_options.dart
 *.sqlite
 *.sqlite3
 
+# Notification related
+**/flutter_local_notifications_*.db
+**/flutter_local_notifications_*.db-*
+notification_cache/
+.notification_*
+
 # Test related
 .test_coverage.dart
 test/.test_coverage.dart

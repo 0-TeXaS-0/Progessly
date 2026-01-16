@@ -1,10 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/repositories/task_repository.dart';
 import '../data/models/task_model.dart';
 import '../data/models/streak_data.dart';
+import '../data/preferences/notification_preferences.dart';
+import '../services/notification_service.dart';
 
 class TaskProvider with ChangeNotifier {
   final TaskRepository _repository = TaskRepository();
+  final NotificationService _notificationService = NotificationService();
+  NotificationPreferences? _notifPrefs;
 
   List<TaskModel> _tasks = [];
   StreakData _streak = StreakData();
@@ -16,14 +21,22 @@ class TaskProvider with ChangeNotifier {
 
   int get completedCount => _tasks.where((t) => t.isCompleted).length;
   int get totalCount => _tasks.length;
+  int get pendingCount => _tasks.where((t) => !t.isCompleted).length;
 
   Future<void> loadTasks() async {
     _isLoading = true;
     notifyListeners();
 
     try {
+      // Initialize notification preferences
+      if (_notifPrefs == null) {
+        final prefs = await SharedPreferences.getInstance();
+        _notifPrefs = NotificationPreferences(prefs);
+      }
+
       _tasks = await _repository.getTasks();
       await loadStreak();
+      await _scheduleTaskReminders();
     } catch (e) {
       debugPrint('Error loading tasks: $e');
     } finally {
@@ -80,5 +93,18 @@ class TaskProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Error deleting task: $e');
     }
+  }
+
+  Future<void> _scheduleTaskReminders() async {
+    if (_notifPrefs == null) return;
+
+    final enabled =
+        _notifPrefs!.notificationsEnabled &&
+        _notifPrefs!.tasksNotificationsEnabled;
+
+    await _notificationService.scheduleTaskReminders(
+      enabled: enabled,
+      pendingTasks: pendingCount,
+    );
   }
 }
