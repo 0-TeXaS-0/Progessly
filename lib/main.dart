@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/theme.dart';
 import 'data/preferences/preferences_manager.dart';
 import 'services/notification_service.dart';
 import 'providers/task_provider.dart';
@@ -8,6 +7,7 @@ import 'providers/meal_provider.dart';
 import 'providers/water_provider.dart';
 import 'providers/habit_provider.dart';
 import 'providers/profile_provider.dart';
+import 'providers/theme_provider.dart';
 import 'ui/onboarding/onboarding_screen.dart';
 import 'ui/home/home_screen.dart';
 
@@ -34,19 +34,26 @@ class ProgresslyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<PreferencesManager>.value(value: prefsManager),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider()..loadPreferences(),
+        ),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => MealProvider()),
         ChangeNotifierProvider(create: (_) => WaterProvider(prefsManager)),
         ChangeNotifierProvider(create: (_) => HabitProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider(prefsManager)),
       ],
-      child: MaterialApp(
-        title: 'Progressly',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        home: prefsManager.isOnboardingComplete()
-            ? const HomeScreen()
-            : const OnboardingScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'Progressly',
+            debugShowCheckedModeBanner: false,
+            theme: themeProvider.getTheme(),
+            home: prefsManager.isOnboardingComplete()
+                ? const HomeScreen()
+                : const OnboardingScreen(),
+          );
+        },
       ),
     );
   }

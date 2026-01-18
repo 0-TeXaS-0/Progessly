@@ -17,7 +17,12 @@ class ProgresslyDatabase {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2, // Incremented version for meal templates
+      onCreate: _createDB,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   Future _createDB(Database db, int version) async {
@@ -125,6 +130,41 @@ class ProgresslyDatabase {
         FOREIGN KEY (habitId) REFERENCES habits (id) ON DELETE CASCADE
       )
     ''');
+
+    // Meal templates table
+    await db.execute('''
+      CREATE TABLE meal_templates (
+        id $idType,
+        name $textType,
+        calories $intType,
+        mealType TEXT,
+        isFavorite $boolType,
+        timesLogged $intType,
+        createdAt $textType
+      )
+    ''');
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add meal templates table for existing databases
+      const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+      const intType = 'INTEGER NOT NULL';
+      const textType = 'TEXT NOT NULL';
+      const boolType = 'INTEGER NOT NULL';
+
+      await db.execute('''
+        CREATE TABLE meal_templates (
+          id $idType,
+          name $textType,
+          calories $intType,
+          mealType TEXT,
+          isFavorite $boolType,
+          timesLogged $intType,
+          createdAt $textType
+        )
+      ''');
+    }
   }
 
   Future close() async {

@@ -136,6 +136,19 @@ firebase_options.dart
 **/flutter_local_notifications_*.db-*
 notification_cache/
 .notification_*
+notification_settings.json
+
+# Meal templates (user data)
+meal_templates_backup.json
+meal_logs_*.json
+
+# Theme & UI preferences
+theme_cache.json
+.theme_*
+
+# Insights cache
+insights_cache.json
+.insights_*
 
 # Test related
 .test_coverage.dart

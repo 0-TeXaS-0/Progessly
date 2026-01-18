@@ -3,7 +3,12 @@ import 'package:provider/provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../data/models/user_profile.dart';
 import '../../data/models/streak_data.dart';
+import '../../data/models/quote_model.dart';
+import '../../services/insights_service.dart';
+import '../../ui/widgets/calendar_heatmap.dart';
+import '../../ui/widgets/skeleton_loader.dart';
 import 'notification_settings_screen.dart';
+import 'theme_customization_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -28,6 +33,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('Profile'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.palette_outlined),
+            tooltip: 'Theme',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ThemeCustomizationScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_outlined),
             tooltip: 'Notification Settings',
             onPressed: () {
@@ -44,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Consumer<ProfileProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const ProfileSkeletonLoader();
           }
 
           final profile = provider.profile;
@@ -58,6 +75,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildDailyQuote(),
+                  const SizedBox(height: 16),
+                  _buildSmartInsights(provider),
+                  const SizedBox(height: 16),
+                  _buildActivityHeatmap(provider),
+                  const SizedBox(height: 16),
                   _buildProfileCard(profile),
                   const SizedBox(height: 16),
                   _buildDailySummary(provider),
@@ -68,6 +91,218 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildDailyQuote() {
+    final quote = QuoteService.getDailyQuote();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.purple.shade400, Colors.blue.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.format_quote,
+                color: Colors.white.withValues(alpha: 0.9),
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Daily Inspiration',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '"${quote.text}"',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '— ${quote.author}',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmartInsights(ProfileProvider provider) {
+    if (provider.insights.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Smart Insights',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...provider.insights.map((insight) => _buildInsightCard(insight)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInsightCard(InsightModel insight) {
+    Color getInsightColor() {
+      switch (insight.type) {
+        case InsightType.achievement:
+          return Colors.green;
+        case InsightType.warning:
+          return Colors.orange;
+        case InsightType.motivation:
+          return Colors.blue;
+        case InsightType.productivity:
+          return Colors.purple;
+        case InsightType.health:
+          return Colors.teal;
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: getInsightColor().withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: getInsightColor().withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(insight.icon, style: const TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  insight.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: getInsightColor(),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(insight.message, style: const TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityHeatmap(ProfileProvider provider) {
+    if (provider.activityData.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return CalendarHeatmap(
+      data: provider.activityData,
+      numberOfWeeks: 12,
+      onDayTapped: (date) {
+        _showDayDetailsDialog(date, provider);
+      },
+    );
+  }
+
+  void _showDayDetailsDialog(DateTime date, ProfileProvider provider) {
+    final formattedDate = '${date.day}/${date.month}/${date.year}';
+    final activity = provider.activityData.firstWhere(
+      (a) =>
+          a.date.day == date.day &&
+          a.date.month == date.month &&
+          a.date.year == date.year,
+      orElse: () => ActivityData(date: date, intensity: 0),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(formattedDate),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Activity Level: ${activity.intensity}%',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(value: activity.intensity / 100),
+            const SizedBox(height: 16),
+            Text(
+              activity.intensity >= 75
+                  ? '🔥 Excellent day!'
+                  : activity.intensity >= 50
+                  ? '👍 Good progress'
+                  : activity.intensity >= 25
+                  ? '💪 Keep going'
+                  : '📝 Light activity',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

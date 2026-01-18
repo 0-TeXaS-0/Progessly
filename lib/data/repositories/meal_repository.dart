@@ -1,6 +1,8 @@
 import '../database/meal_dao.dart';
 import '../models/meal_model.dart';
+import '../models/meal_template_model.dart';
 import '../models/streak_data.dart';
+import '../database/progressly_database.dart';
 
 class MealRepository {
   final MealDao _mealDao = MealDao();
@@ -65,5 +67,88 @@ class MealRepository {
       longestStreak: longestStreak,
       weeklyStreak: weeklyCount,
     );
+  }
+
+  // ========== MEAL TEMPLATES ==========
+
+  Future<int> addTemplate(MealTemplateModel template) async {
+    final db = await ProgresslyDatabase.instance.database;
+    return await db.insert('meal_templates', template.toMap());
+  }
+
+  Future<List<MealTemplateModel>> getAllTemplates() async {
+    final db = await ProgresslyDatabase.instance.database;
+    final maps = await db.query('meal_templates', orderBy: 'name ASC');
+    return maps.map((map) => MealTemplateModel.fromMap(map)).toList();
+  }
+
+  Future<List<MealTemplateModel>> getTemplatesByMealType(
+    String mealType,
+  ) async {
+    final db = await ProgresslyDatabase.instance.database;
+    final maps = await db.query(
+      'meal_templates',
+      where: 'mealType = ?',
+      whereArgs: [mealType],
+      orderBy: 'timesLogged DESC, name ASC',
+    );
+    return maps.map((map) => MealTemplateModel.fromMap(map)).toList();
+  }
+
+  Future<List<MealTemplateModel>> getFavoriteTemplates() async {
+    final db = await ProgresslyDatabase.instance.database;
+    final maps = await db.query(
+      'meal_templates',
+      where: 'isFavorite = ?',
+      whereArgs: [1],
+      orderBy: 'timesLogged DESC',
+    );
+    return maps.map((map) => MealTemplateModel.fromMap(map)).toList();
+  }
+
+  Future<void> updateTemplate(MealTemplateModel template) async {
+    final db = await ProgresslyDatabase.instance.database;
+    await db.update(
+      'meal_templates',
+      template.toMap(),
+      where: 'id = ?',
+      whereArgs: [template.id],
+    );
+  }
+
+  Future<void> deleteTemplate(int id) async {
+    final db = await ProgresslyDatabase.instance.database;
+    await db.delete('meal_templates', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> incrementTemplateUsage(int templateId) async {
+    final db = await ProgresslyDatabase.instance.database;
+    await db.rawUpdate(
+      '''
+      UPDATE meal_templates 
+      SET timesLogged = timesLogged + 1 
+      WHERE id = ?
+    ''',
+      [templateId],
+    );
+  }
+
+  Future<MealModel> logFromTemplate(MealTemplateModel template) async {
+    final meal = MealModel(
+      name: template.name,
+      calories: template.calories,
+      mealType: template.mealType,
+      time: _getCurrentTime(),
+    );
+
+    final mealId = await addMeal(meal);
+    await incrementTemplateUsage(template.id!);
+
+    return meal.copyWith(id: mealId);
+  }
+
+  String _getCurrentTime() {
+    final now = DateTime.now();
+    return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
   }
 }
