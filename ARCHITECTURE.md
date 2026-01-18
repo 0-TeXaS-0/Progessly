@@ -227,6 +227,221 @@ totalScore += (habits * 7).clamp(0, 20)     // Max 20 points
 intensity = totalScore.clamp(0, 100)        // 0-100%
 ```
 
+## 🔊 Sound & Haptic Feedback System
+
+### SoundService (`services/sound_service.dart`)
+
+**Audio System**:
+- System sounds (no asset files required)
+- iOS/Android platform-specific sounds
+- 10+ different sound effects for various actions
+
+**Haptic Feedback**:
+- Light impact: Button taps, selections
+- Medium impact: Task completion, habit completion
+- Heavy impact: Streak milestones, record breaking
+- Selection feedback: Swipe gestures
+
+**Sound Effects**:
+```dart
+playTaskComplete()      // ✅ Task checked off
+playTaskDelete()        // ❌ Task deleted
+playHabitComplete()     // 🎯 Habit marked done
+playWaterLog()          // 💧 Water logged
+playMealLog()           // 🍽️ Meal logged
+playStreakMilestone()   // 🔥 Streak achievement
+playRecordBroken()      // 🏆 Personal record broken
+playButtonTap()         // 📱 UI interaction
+playError()             // ⚠️ Error occurred
+playGenericSuccess()    // ✨ Generic success
+```
+
+**Preferences**:
+- Sound effects toggle (enable/disable)
+- Haptic feedback toggle (independent control)
+- Persisted in SharedPreferences
+
+## 🏆 Personal Records System
+
+### PersonalRecordsService (`services/personal_records_service.dart`)
+
+**Record Categories**:
+1. **Most Tasks Completed** (single day)
+2. **Most Water Consumed** (ml in single day)
+3. **Most Meals Logged** (single day)
+4. **Most Habits Completed** (single day)
+5. **Longest Streak** (consecutive active days)
+
+**Auto-Tracking**:
+- Automatically checks after each action
+- Compares current performance to stored records
+- Updates and persists new records
+- Triggers celebration sound on record break
+
+**Data Model** (`data/models/personal_record.dart`):
+```dart
+class PersonalRecord {
+  final String category;     // e.g., 'tasks', 'water'
+  final double value;        // Numeric achievement
+  final DateTime achievedAt; // When record was set
+  final String unit;         // 'count', 'ml', 'days'
+}
+```
+
+**UI** (`ui/screens/personal_records_screen.dart`):
+- Trophy icon displays for each category
+- Shows record value and achievement date
+- Color-coded cards
+- "Clear All Records" option
+
+## ⚖️ Unit Preferences System
+
+### UnitPreferencesProvider (`providers/unit_preferences_provider.dart`)
+
+**Supported Units**:
+1. **Water Units**:
+   - Milliliters (ml) - default
+   - Fluid Ounces (oz) - 1 ml = 0.033814 oz
+   - Cups (cups) - 1 ml = 0.00422675 cups
+
+2. **Weight Units**:
+   - Kilograms (kg) - default
+   - Pounds (lbs) - 1 kg = 2.20462 lbs
+
+**Conversion Logic**:
+```dart
+// Water conversions
+ml → oz:   value * 0.033814
+ml → cups: value * 0.00422675
+
+// Weight conversions
+kg → lbs:  value * 2.20462
+```
+
+**Integration**:
+- Auto-converts throughout app
+- Display formatted with unit labels
+- Settings screen for user selection
+- Persisted in SharedPreferences
+
+## ✨ Advanced Gesture System
+
+### Gesture Widgets (`ui/widgets/gesture_widgets.dart`)
+
+**1. SwipeToDismissWidget**:
+- Swipe left to reveal delete action
+- Confirmation dialog before deletion
+- Haptic feedback on swipe
+- Smooth animation
+
+**2. LongPressMenuWidget**:
+- Hold item for 500ms to show menu
+- Context-aware actions
+- Haptic feedback on activation
+- Quick access to common actions
+
+**3. DraggableListItem**:
+- Hold and drag to reorder
+- Visual elevation on drag
+- Haptic feedback on pickup/drop
+- Smooth reordering animation
+
+**Usage Pattern**:
+```dart
+// Swipe to delete
+SwipeToDismissWidget(
+  onDelete: () => deleteItem(),
+  child: ListTile(...),
+)
+
+// Long press menu
+LongPressMenuWidget(
+  menuItems: [
+    MenuAction(title: 'Edit', onTap: edit),
+    MenuAction(title: 'Delete', onTap: delete),
+  ],
+  child: Card(...),
+)
+
+// Drag to reorder
+DraggableListItem(
+  onReorder: (oldIndex, newIndex) => reorderList(),
+  child: ListTile(...),
+)
+```
+
+## 🎯 Task Priority System
+
+### Database Schema (v3)
+**tasks table**:
+```sql
+CREATE TABLE tasks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  description TEXT,
+  date TEXT NOT NULL,
+  isCompleted INTEGER NOT NULL DEFAULT 0,
+  priority INTEGER NOT NULL DEFAULT 0  -- NEW in v3
+)
+```
+
+**Priority Levels**:
+- `0` = Low Priority (🟢 Green)
+- `1` = Medium Priority (🟠 Orange)
+- `2` = High Priority (🔴 Red)
+
+**Migration from v2 to v3**:
+```dart
+await db.execute('ALTER TABLE tasks ADD COLUMN priority INTEGER DEFAULT 0');
+```
+
+### EnhancedTasksScreen
+**Features**:
+1. **Visual Indicators**:
+   - Color-coded left border (4px thick)
+   - Priority badge with icon
+   - Border color matches priority
+
+2. **Sorting Logic**:
+   ```dart
+   // Sort by completion status first
+   if (a.isCompleted != b.isCompleted) {
+     return a.isCompleted ? 1 : -1;
+   }
+   // Then by priority (high to low)
+   return b.priority.compareTo(a.priority);
+   ```
+
+3. **Gesture Integration**:
+   - **Drag-to-Reorder**: Hold and drag tasks
+   - **Long-Press Menu**: Quick priority changes
+   - **Swipe-to-Delete**: Delete with confirmation
+
+4. **Priority Actions**:
+   - Set Low/Medium/High via long-press menu
+   - Drag to manually reorder
+   - Auto-sort on completion toggle
+
+### TaskProvider Updates
+**New Methods**:
+- `addTaskModel(TaskModel)` - Add task with priority
+- `updateTask(TaskModel)` - Update existing task
+- `toggleTaskCompletion(id)` - Toggle and re-sort
+
+**TaskModel Extended**:
+```dart
+class TaskModel {
+  final int? id;
+  final String title;
+  final String? description;
+  final String date;
+  final bool isCompleted;
+  final int priority;  // NEW: 0, 1, or 2
+  
+  TaskModel copyWith({int? priority, ...}) { ... }
+}
+```
+
 ## 📅 Activity Heatmap System
 
 ### CalendarHeatmap Widget
@@ -278,26 +493,149 @@ intensity = totalScore.clamp(0, 100)        // 0-100%
 - Daily rotation based on day of year
 - Special milestone quotes for streaks (7, 30, 50, 100 days)
 
+## 👤 Profile Management & Avatar System
+
+### EditProfileScreen (`ui/screens/edit_profile_screen.dart`)
+
+**Form Sections**:
+1. **Avatar Management**:
+   - Upload from camera or gallery
+   - Image optimization (512×512, 85% quality)
+   - Remove photo option
+   - Default avatar fallback
+
+2. **Personal Information**:
+   - Name (required)
+   - Email (optional)
+   - Age (1-120 years)
+
+3. **Health Information**:
+   - Weight (with unit conversion)
+   - Height (cm, optional)
+
+4. **Goals**:
+   - Goal description text
+
+**Image Picker Integration**:
+```dart
+// Dependencies
+image_picker: ^1.1.2
+path_provider: ^2.1.4
+
+// Image sources
+- Camera: ImageSource.camera
+- Gallery: ImageSource.gallery
+
+// Optimization
+- Max dimensions: 512×512
+- Compression: 85%
+- Format: JPEG
+```
+
+**Data Flow**:
+```
+User taps avatar → Show source dialog (Camera/Gallery)
+    ↓
+ImagePicker picks image
+    ↓
+Image optimized (resize + compress)
+    ↓
+Save to app documents directory
+    ↓
+Update ProfileProvider with file path
+    ↓
+Persist path in SharedPreferences
+    ↓
+Display File-based image in UI
+```
+
+### UserProfile Model Extended
+**New Fields**:
+```dart
+class UserProfile {
+  final String name;
+  final int age;
+  final String gender;
+  final double weight;
+  final bool notificationsEnabled;
+  final String? email;           // NEW
+  final double? height;          // NEW (cm)
+  final String? goal;            // NEW
+  final String? avatarPath;      // NEW (file path)
+}
+```
+
+**ProfileProvider Updates**:
+- `updateProfileFields()` - Updates all profile data including avatar
+- `avatarPath` getter - Returns current avatar file path
+- `loadProfile()` - Loads avatar path from SharedPreferences
+
+**Avatar Display**:
+- ProfileScreen: CircleAvatar with File image or default icon
+- EditProfileScreen: Large preview with camera/gallery/remove actions
+- Fallback: Person icon when no avatar set
+
+## ⚙️ Settings Hub
+
+### SettingsScreen (`ui/screens/settings_screen.dart`)
+
+**Settings Categories**:
+
+1. **Unit Preferences**:
+   - Water Units: ml, oz, cups
+   - Weight Units: kg, lbs
+   - Visual selection with icons
+
+2. **Sound & Haptics**:
+   - Sound Effects toggle
+   - Haptic Feedback toggle
+   - Independent on/off controls
+
+3. **About**:
+   - App name: Progressly
+   - Version: 1.0.0
+   - Description
+
+**UI Design**:
+- Icon-based selection (radio_button_checked/unchecked)
+- Color-coded sections
+- ListTile format with trailing switches
+- Immediate save on change
+
+**Navigation**:
+- Accessible from ProfileScreen
+- Material 3 styling
+- Settings icon in app bar
+
 ---
 
-## �🔄 Data Flow Example: Adding a Task
+## 🔄 Data Flow Example: Adding a Task with Priority
 
 ```
 User taps "Add Task" button
          ↓
-TasksScreen calls provider.addTask()
+EnhancedTasksScreen shows task form with priority selection
          ↓
-TaskProvider.addTask() validates input
+User enters task details + selects priority (Low/Medium/High)
+         ↓
+TaskProvider.addTaskModel(TaskModel) validates input
          ↓
 TaskRepository.addTask() abstracts storage
          ↓
-TaskDao.insertTask() executes SQL INSERT
+TaskDao.insertTask() executes SQL INSERT with priority
          ↓
-SQLite Database stores the task
+SQLite Database (v3) stores task with priority column
          ↓
-TaskProvider.loadTasks() refreshes state
+TaskProvider.loadTasks() refreshes and sorts by priority
          ↓
 notifyListeners() triggers UI rebuild
+         ↓
+Consumer rebuilds EnhancedTasksScreen
+         ↓
+User sees task with color-coded priority indicator
+         ↓
+User can drag to reorder or long-press to change priority
+```
          ↓
 Consumer rebuilds TasksScreen
          ↓
@@ -367,24 +705,34 @@ User selects screen from bottom nav
 | `theme.dart` | Material Design 3 base theme | Core |
 | `notification_service.dart` | Notification scheduling & management | Service |
 | `insights_service.dart` | **Phase 3** Smart pattern analysis | Service |
+| `sound_service.dart` | **Phase 4** Sound effects & haptic feedback | Service |
+| `personal_records_service.dart` | **Phase 4** Auto-track achievements | Service |
 | `notification_preferences.dart` | Notification settings storage | Data |
 | `theme_preferences.dart` | **Phase 3** Theme settings storage | Data |
 | `meal_template_model.dart` | Meal template data structure | Data |
 | `quote_model.dart` | **Phase 3** Quote data & service | Data |
+| `personal_record.dart` | **Phase 4** Record data structure | Data |
+| `unit_preference.dart` | **Phase 4** Unit enums & model | Data |
 | `theme_provider.dart` | **Phase 3** Dynamic theme management | State Management |
+| `unit_preferences_provider.dart` | **Phase 4** Unit conversion state | State Management |
 | `notification_settings_screen.dart` | Notification settings UI | Presentation |
 | `theme_customization_screen.dart` | **Phase 3** Theme picker UI | Presentation |
 | `meal_templates_screen.dart` | Template management UI | Presentation |
+| `enhanced_tasks_screen.dart` | **Phase 4** Tasks with priority & gestures | Presentation |
+| `personal_records_screen.dart` | **Phase 4** Achievement display UI | Presentation |
+| `edit_profile_screen.dart` | **Phase 4** Profile editor with avatar | Presentation |
+| `settings_screen.dart` | **Phase 4** Settings hub | Presentation |
 | `calendar_heatmap.dart` | **Phase 3** Activity visualization widget | Presentation |
 | `celebration_animation.dart` | **Polish** Celebration & confetti effects | Presentation |
 | `skeleton_loader.dart` | **Polish** Loading placeholder widgets | Presentation |
 | `page_transitions.dart` | **Polish** Custom route transitions | Presentation |
+| `gesture_widgets.dart` | **Phase 4** Swipe, long-press, drag widgets | Presentation |
 | `*_screen.dart` | UI display | Presentation |
 | `*_provider.dart` | State management | State Management |
 | `*_repository.dart` | Data abstraction | Business Logic |
 | `*_dao.dart` | Database operations | Data |
 | `*_model.dart` | Data structures | Data |
-| `progressly_database.dart` | Database setup (v2 schema) | Data |
+| `progressly_database.dart` | Database setup (v3 schema with priority) | Data |
 | `preferences_manager.dart` | Settings storage | Data |
 
 ## 🎨 Widget Tree Example: TasksScreen

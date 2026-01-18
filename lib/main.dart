@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data/preferences/preferences_manager.dart';
 import 'services/notification_service.dart';
+import 'services/sound_service.dart';
 import 'providers/task_provider.dart';
 import 'providers/meal_provider.dart';
 import 'providers/water_provider.dart';
 import 'providers/habit_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/unit_preferences_provider.dart';
 import 'ui/onboarding/onboarding_screen.dart';
 import 'ui/home/home_screen.dart';
 
@@ -20,6 +22,10 @@ void main() async {
   // Initialize notification service
   final notificationService = NotificationService();
   await notificationService.initialize();
+
+  // Initialize sound service
+  final soundService = SoundService();
+  await soundService.initialize();
 
   runApp(ProgresslyApp(prefsManager: prefsManager));
 }
@@ -36,6 +42,9 @@ class ProgresslyApp extends StatelessWidget {
         Provider<PreferencesManager>.value(value: prefsManager),
         ChangeNotifierProvider(
           create: (_) => ThemeProvider()..loadPreferences(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => UnitPreferencesProvider()..loadPreferences(),
         ),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => MealProvider()),

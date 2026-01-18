@@ -80,6 +80,52 @@ A modern, clean, and fully functional cross-platform app that helps users track 
 - Special milestone quotes for streaks
 - Beautiful gradient card display
 
+### 🏆 **Personal Records**
+- Track your best performances across all categories
+- Records for: Most tasks completed, water consumed, meals logged, habits completed, longest streak
+- Visual trophy display with achievement dates
+- Auto-updates when you break records
+
+### 🔊 **Sound Effects & Haptics**
+- System sounds for all interactions
+- Haptic feedback (vibration) on actions
+- Different sounds for: task completion, deletion, habits, water logging, streaks, record breaking
+- Configurable in settings (enable/disable independently)
+
+### ⚖️ **Unit Preferences**
+- **Water Units**: Choose between ml, oz, or cups
+- **Weight Units**: kg or lbs
+- Auto-conversion throughout the app
+- Persistent preferences
+
+### ✨ **Advanced Gestures**
+- **Swipe-to-Delete**: Swipe left to delete with confirmation
+- **Long-Press Menus**: Hold items for quick actions
+- **Drag-to-Reorder**: Hold and drag tasks to change priority
+- Haptic feedback on all gestures
+
+### 🎯 **Task Priority System**
+- 3 Priority levels: Low (🟢), Medium (🟠), High (🔴)
+- Visual color-coded indicators and borders
+- Auto-sort by priority and completion status
+- Quick priority changes via long-press menu
+- Drag tasks to reorder manually
+- Priority badges and icons
+
+### 👤 **Profile Management**
+- **Edit Profile**: Update name, email, age, weight, height, goal
+- **Profile Avatar**: Upload photo from camera or gallery
+- **Remove Photo**: Delete avatar and revert to default
+- Image optimization (512x512, 85% quality)
+- Persistent avatar storage
+- Display avatar throughout the app
+
+### ⚙️ **Settings Hub**
+- **Unit Preferences**: Water and weight units
+- **Sound & Haptics**: Toggle sound effects and vibration
+- **About Section**: App version and info
+- Centralized settings management
+
 ### 🎨 **Modern UI/UX**
 - Material Design 3 components
 - Dark/Light mode with theme customization
@@ -101,12 +147,15 @@ A modern, clean, and fully functional cross-platform app that helps users track 
 - **Language**: Dart
 - **Framework**: Flutter
 - **Architecture**: MVVM with Provider
-- **Database**: SQLite (sqflite v2.4.1) - version 2 schema
+- **Database**: SQLite (sqflite v2.4.1) - version 3 schema
 - **Storage**: SharedPreferences v2.3.5
 - **State Management**: Provider
 - **Notifications**: flutter_local_notifications v19.0.1
 - **Timezone**: timezone v0.10.1, flutter_timezone v3.0.1
 - **Charts**: fl_chart v1.1.1
+- **Audio**: audioplayers v6.1.0 (sound effects)
+- **Image Picker**: image_picker v1.1.2
+- **Path Provider**: path_provider v2.1.4
 - **Internationalization**: intl v0.20.2
 
 ## 📁 Project Structure
@@ -118,36 +167,55 @@ lib/
 ├── data/
 │   ├── models/
 │   │   ├── meal_template_model.dart
-│   │   ├── quote_model.dart            # NEW: Phase 3
+│   │   ├── quote_model.dart            # Phase 3
+│   │   ├── personal_record.dart        # NEW
+│   │   ├── unit_preference.dart        # NEW
 │   │   └── ...
 │   ├── database/
-│   │   └── progressly_database.dart    # v2 schema
+│   │   └── progressly_database.dart    # v3 schema (tasks priority)
 │   ├── preferences/
 │   │   ├── notification_preferences.dart
-│   │   ├── theme_preferences.dart      # NEW: Phase 3
+│   │   ├── theme_preferences.dart      # Phase 3
 │   │   └── ...
 │   └── repositories/
 │       ├── meal_repository.dart        # Templates support
+│       ├── task_repository.dart        # Priority support
 │       └── ...
 ├── providers/
 │   ├── meal_provider.dart              # Templates support
-│   ├── theme_provider.dart             # NEW: Phase 3
-│   ├── profile_provider.dart           # Insights & heatmap
+│   ├── theme_provider.dart             # Phase 3
+│   ├── profile_provider.dart           # Insights, heatmap, avatar
+│   ├── unit_preferences_provider.dart  # NEW
+│   ├── task_provider.dart              # Priority support
 │   └── ...
 ├── services/
 │   ├── notification_service.dart
-│   └── insights_service.dart           # NEW: Polish & Delight
+│   ├── insights_service.dart           # Polish & Delight
+│   ├── sound_service.dart              # NEW
+│   └── personal_records_service.dart   # NEW
 ├── ui/
 │   ├── animations/
-│   │   └── page_transitions.dart       # NEW: Polish & Delight
+│   │   └── page_transitions.dart       # Polish & Delight
 │   ├── onboarding/
 │   ├── home/
 │   ├── screens/
 │   │   ├── notification_settings_screen.dart
 │   │   ├── meal_templates_screen.dart
-│   │   ├── theme_customization_screen.dart  # NEW: Phase 3
+│   │   ├── theme_customization_screen.dart  # Phase 3
 │   │   ├── meals_screen.dart           # Redesigned
+│   │   ├── enhanced_tasks_screen.dart  # NEW (priority, gestures)
+│   │   ├── edit_profile_screen.dart    # NEW (avatar picker)
+│   │   ├── personal_records_screen.dart # NEW
+│   │   ├── settings_screen.dart        # NEW
 │   │   └── ...
+│   └── widgets/
+│       ├── calendar_heatmap.dart       # Phase 3
+│       ├── celebration_animation.dart  # Polish & Delight
+│       ├── skeleton_loader.dart        # Polish & Delight
+│       ├── gesture_widgets.dart        # NEW (swipe, drag, long-press)
+│       └── ...
+└── main.dart
+```
 │   └── widgets/
 │       ├── calendar_heatmap.dart       # NEW: Phase 3
 │       ├── celebration_animation.dart  # NEW: Polish & Delight

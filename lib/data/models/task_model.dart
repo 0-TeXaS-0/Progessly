@@ -6,6 +6,7 @@ class TaskModel {
   final DateTime? completedDate;
   final DateTime createdDate;
   final String category;
+  final int priority; // 0 = low, 1 = medium, 2 = high
 
   TaskModel({
     this.id,
@@ -15,6 +16,7 @@ class TaskModel {
     this.completedDate,
     DateTime? createdDate,
     this.category = 'General',
+    this.priority = 0,
   }) : createdDate = createdDate ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
@@ -26,6 +28,7 @@ class TaskModel {
       'completedDate': completedDate?.toIso8601String(),
       'createdDate': createdDate.toIso8601String(),
       'category': category,
+      'priority': priority,
     };
   }
 
@@ -40,6 +43,7 @@ class TaskModel {
           : null,
       createdDate: DateTime.parse(map['createdDate'] as String),
       category: map['category'] as String? ?? 'General',
+      priority: map['priority'] as int? ?? 0,
     );
   }
 
@@ -51,6 +55,7 @@ class TaskModel {
     DateTime? completedDate,
     DateTime? createdDate,
     String? category,
+    int? priority,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -60,6 +65,7 @@ class TaskModel {
       completedDate: completedDate ?? this.completedDate,
       createdDate: createdDate ?? this.createdDate,
       category: category ?? this.category,
+      priority: priority ?? this.priority,
     );
   }
 }

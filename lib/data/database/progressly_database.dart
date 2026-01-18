@@ -19,7 +19,7 @@ class ProgresslyDatabase {
 
     return await openDatabase(
       path,
-      version: 2, // Incremented version for meal templates
+      version: 3, // Incremented for task priority
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -40,7 +40,8 @@ class ProgresslyDatabase {
         isCompleted $boolType,
         completedDate TEXT,
         createdDate $textType,
-        category TEXT
+        category TEXT,
+        priority INTEGER DEFAULT 0
       )
     ''');
 
@@ -163,6 +164,13 @@ class ProgresslyDatabase {
           timesLogged $intType,
           createdAt $textType
         )
+      ''');
+    }
+
+    if (oldVersion < 3) {
+      // Add priority column to tasks table
+      await db.execute('''
+        ALTER TABLE tasks ADD COLUMN priority INTEGER DEFAULT 0
       ''');
     }
   }

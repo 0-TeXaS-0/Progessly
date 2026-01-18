@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/tasks_screen.dart';
+import '../screens/enhanced_tasks_screen.dart';
 import '../screens/meals_screen.dart';
 import '../screens/water_screen.dart';
 import '../screens/habits_screen.dart';
@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = const [
-    TasksScreen(),
+    EnhancedTasksScreen(),
     MealsScreen(),
     WaterScreen(),
     HabitsScreen(),

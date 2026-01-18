@@ -1,3 +1,15 @@
+# App-specific cache files
+theme_cache.json
+insights_cache.json
+unit_preferences.json
+
+# User uploaded images
+*.jpg
+*.jpeg
+*.png
+*.gif
+!assets/**
+
 # Miscellaneous
 *.class
 *.log

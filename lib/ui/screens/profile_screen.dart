@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 import '../../providers/profile_provider.dart';
 import '../../data/models/user_profile.dart';
 import '../../data/models/streak_data.dart';
@@ -7,8 +8,9 @@ import '../../data/models/quote_model.dart';
 import '../../services/insights_service.dart';
 import '../../ui/widgets/calendar_heatmap.dart';
 import '../../ui/widgets/skeleton_loader.dart';
-import 'notification_settings_screen.dart';
-import 'theme_customization_screen.dart';
+import 'edit_profile_screen.dart';
+import 'personal_records_screen.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -33,26 +35,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('Profile'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.palette_outlined),
-            tooltip: 'Theme',
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Edit Profile',
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ThemeCustomizationScreen(),
+                  builder: (context) => const EditProfileScreen(),
                 ),
               );
             },
           ),
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            tooltip: 'Notification Settings',
+            icon: const Icon(Icons.emoji_events_outlined),
+            tooltip: 'Personal Records',
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const NotificationSettingsScreen(),
+                  builder: (context) => const PersonalRecordsScreen(),
                 ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),
@@ -308,21 +320,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileCard(UserProfile profile) {
+    final hasAvatar =
+        profile.avatarPath.isNotEmpty && File(profile.avatarPath).existsSync();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Profile',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  backgroundImage: hasAvatar
+                      ? FileImage(File(profile.avatarPath))
+                      : null,
+                  child: !hasAvatar
+                      ? Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (profile.email.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          profile.email,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const Divider(),
-            _buildInfoRow('Name', profile.name),
+            const Divider(height: 24),
             _buildInfoRow('Age', '${profile.age} years'),
             _buildInfoRow('Gender', profile.gender),
             _buildInfoRow('Weight', '${profile.weight} kg'),
+            if (profile.height > 0)
+              _buildInfoRow(
+                'Height',
+                '${profile.height.toStringAsFixed(0)} cm',
+              ),
+            if (profile.goal.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text('Goal', style: const TextStyle(fontWeight: FontWeight.w500)),
+              const SizedBox(height: 4),
+              Text(
+                profile.goal,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
           ],
         ),
       ),

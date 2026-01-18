@@ -94,6 +94,43 @@ class ProfileProvider with ChangeNotifier {
     }
   }
 
+  // Convenience method for updating profile with individual fields
+  Future<void> updateProfileFields({
+    String? name,
+    String? email,
+    int? age,
+    double? weight,
+    double? height,
+    String? goal,
+    String? gender,
+    String? avatarPath,
+  }) async {
+    if (_profile == null) return;
+
+    final updatedProfile = _profile!.copyWith(
+      name: name,
+      email: email,
+      age: age,
+      weight: weight?.toInt(),
+      height: height,
+      goal: goal,
+      gender: gender,
+      avatarPath: avatarPath,
+    );
+
+    await updateProfile(updatedProfile);
+  }
+
+  // Getters for profile fields
+  String get name => _profile?.name ?? '';
+  String get email => _profile?.email ?? '';
+  int get age => _profile?.age ?? 0;
+  int get weight => _profile?.weight ?? 0;
+  double get height => _profile?.height ?? 0;
+  String get goal => _profile?.goal ?? '';
+  String get gender => _profile?.gender ?? '';
+  String get avatarPath => _profile?.avatarPath ?? '';
+
   Future<void> loadActivityData() async {
     try {
       final activities = <ActivityData>[];

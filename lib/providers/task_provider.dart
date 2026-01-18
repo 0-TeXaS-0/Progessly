@@ -73,6 +73,24 @@ class TaskProvider with ChangeNotifier {
     }
   }
 
+  Future<void> addTaskModel(TaskModel task) async {
+    try {
+      await _repository.addTask(task);
+      await loadTasks();
+    } catch (e) {
+      debugPrint('Error adding task: $e');
+    }
+  }
+
+  Future<void> updateTask(TaskModel task) async {
+    try {
+      await _repository.updateTask(task);
+      await loadTasks();
+    } catch (e) {
+      debugPrint('Error updating task: $e');
+    }
+  }
+
   Future<void> toggleTask(TaskModel task) async {
     try {
       if (task.isCompleted) {

@@ -34,6 +34,10 @@ class TaskRepository {
     await _taskDao.updateTask(updatedTask);
   }
 
+  Future<void> updateTask(TaskModel task) async {
+    await _taskDao.updateTask(task);
+  }
+
   Future<void> deleteTask(int id) async {
     await _taskDao.deleteTask(id);
   }

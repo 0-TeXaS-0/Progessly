@@ -9,6 +9,10 @@ class PreferencesManager {
   static const String _keyNotifications = 'notifications_enabled';
   static const String _keyOnboardingComplete = 'onboarding_complete';
   static const String _keyDailyWaterGoal = 'daily_water_goal';
+  static const String _keyAvatarPath = 'user_avatar_path';
+  static const String _keyEmail = 'user_email';
+  static const String _keyHeight = 'user_height';
+  static const String _keyGoal = 'user_goal';
 
   late SharedPreferences _prefs;
 
@@ -32,6 +36,10 @@ class PreferencesManager {
     await _prefs.setString(_keyGender, profile.gender);
     await _prefs.setInt(_keyWeight, profile.weight);
     await _prefs.setBool(_keyNotifications, profile.notificationsEnabled);
+    await _prefs.setString(_keyEmail, profile.email);
+    await _prefs.setDouble(_keyHeight, profile.height);
+    await _prefs.setString(_keyGoal, profile.goal);
+    await _prefs.setString(_keyAvatarPath, profile.avatarPath);
   }
 
   UserProfile? getUserProfile() {
@@ -50,6 +58,10 @@ class PreferencesManager {
       gender: gender,
       weight: weight,
       notificationsEnabled: _prefs.getBool(_keyNotifications) ?? true,
+      email: _prefs.getString(_keyEmail) ?? '',
+      height: _prefs.getDouble(_keyHeight) ?? 0,
+      goal: _prefs.getString(_keyGoal) ?? '',
+      avatarPath: _prefs.getString(_keyAvatarPath) ?? '',
     );
   }
 
